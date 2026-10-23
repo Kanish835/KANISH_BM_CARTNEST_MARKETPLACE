@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CartNest | Settlement Control Tower</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="dashboard_data.js"></script>
+  <style>
+    :root { --ink:#162333; --muted:#728096; --line:#e7edf3; --bg:#f5f8fb; --card:#fff; --navy:#12243a; --teal:#19a88e; --orange:#f59c4a; --red:#eb6b66; --blue:#4778ee; }
+    * { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--ink); font-family:"DM Sans",sans-serif; }
+    .shell { display:flex; min-height:100vh; } .sidebar { width:240px; background:var(--navy); color:#dce6f0; padding:28px 18px; position:fixed; inset:0 auto 0 0; }
+    .brand { color:#fff; font:700 21px "Space Grotesk"; letter-spacing:-.5px; padding:0 13px 34px; } .brand b { color:#42d3b7; }
+    .nav-label { color:#74869d; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; margin:23px 13px 10px; }
+    .nav-item { display:block; padding:11px 13px; border-radius:9px; font-size:13px; margin:3px 0; color:#9cafc3; text-decoration:none; } .nav-item.active { background:#203650; color:#fff; } .sidebar-link:hover { background:#203650; color:#fff; }
+    .sidebar-footer { position:absolute; bottom:25px; left:31px; right:20px; font-size:11px; color:#7e91a9; line-height:1.5; }
+    main { margin-left:240px; width:calc(100% - 240px); padding:31px 38px 50px; max-width:1600px; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:26px; } h1 { font:700 28px "Space Grotesk"; margin:0; letter-spacing:-.7px; } .subtitle { color:var(--muted); font-size:13px; margin-top:6px; max-width:680px; }
+    .top-actions { display:flex; gap:10px; align-items:center; } .period,.download { background:#fff; border:1px solid var(--line); border-radius:9px; padding:10px 14px; color:var(--muted); font-size:12px; box-shadow:0 2px 8px #19304d08; } .download { background:var(--navy); border-color:var(--navy); color:#fff; text-decoration:none; font-weight:600; }
+    .grid { display:grid; gap:16px; } .kpis { grid-template-columns:repeat(4,1fr); } .card { background:var(--card); border:1px solid var(--line); border-radius:13px; box-shadow:0 3px 12px #19304d08; }
+    .kpi { padding:19px 20px; min-height:126px; position:relative; overflow:hidden; } .kpi:after { content:""; width:62px; height:62px; border-radius:50%; position:absolute; right:-17px; top:-18px; background:#eff9f7; }
+    .kpi:nth-child(2):after { background:#fff6eb; } .kpi:nth-child(3):after { background:#edf2ff; } .kpi:nth-child(4):after { background:#fff0f0; }
+    .kpi-label { color:var(--muted); font-size:12px; font-weight:600; } .kpi-value { font:700 25px "Space Grotesk"; margin:12px 0 8px; } .kpi-meta { font-size:11px; color:var(--muted); } .good { color:var(--teal); } .warn { color:var(--orange); } .bad { color:var(--red); }
+    .section { margin-top:26px; } .section-head { display:flex; align-items:end; justify-content:space-between; margin-bottom:12px; } h2 { font:600 17px "Space Grotesk"; margin:0; } .section-note { color:var(--muted); font-size:12px; } .section-kicker { color:var(--teal); font-size:10px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; margin-bottom:6px; }
+    .two { grid-template-columns:1.25fr .75fr; } .chart-card { padding:20px; height:340px; } .chart-wrap { height:270px; position:relative; }
+    .insights { padding:20px 21px; } .insight { display:flex; gap:12px; padding:13px 0; border-bottom:1px solid var(--line); } .insight:last-child { border:0; } .dot { flex:0 0 9px; height:9px; margin-top:5px; border-radius:50%; background:var(--teal); } .dot.orange { background:var(--orange); } .dot.red { background:var(--red); }
+    .insight strong { display:block; font-size:13px; margin-bottom:4px; } .insight span { color:var(--muted); font-size:12px; line-height:1.45; }
+    .bridge { padding:20px; } .bridge-row { display:grid; grid-template-columns:1fr 145px; align-items:center; padding:11px 0; border-bottom:1px solid var(--line); font-size:13px; } .bridge-row:last-child { border:0; margin-top:4px; font-weight:700; font-size:14px; } .amount { text-align:right; font-weight:600; font-variant-numeric:tabular-nums; } .negative { color:var(--red); } .positive { color:var(--teal); } .total { color:var(--navy); }
+    .table-card { overflow:hidden; } .table-toolbar { padding:16px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line); } select { border:1px solid var(--line); border-radius:7px; color:var(--ink); padding:8px 10px; background:#fff; font:12px "DM Sans"; } table { width:100%; border-collapse:collapse; font-size:12px; } th { background:#fbfcfd; text-align:left; color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.7px; padding:11px 20px; } td { padding:12px 20px; border-top:1px solid var(--line); } .tag { border-radius:20px; padding:4px 8px; font-size:10px; font-weight:600; white-space:nowrap; } .tag.timing { color:#a9681e; background:#fff2df; } .tag.unpaid { color:#b44440; background:#ffebea; } .tag.fee { color:#3763cb; background:#ebf0ff; } .tag.cancel { color:#7d56ab; background:#f1eafd; }
+    .empty { text-align:center; padding:25px; color:var(--muted); } .foot { color:var(--muted); text-align:right; font-size:11px; margin-top:16px; }
+    @media(max-width:1050px) { .sidebar { width:70px; padding:24px 9px; } .brand { font-size:0; padding:0 13px 34px; } .brand b { font-size:21px; } .nav-label,.nav-item:not(.active) { display:none; } .nav-item.active { text-align:center; } main { margin-left:70px; width:calc(100% - 70px); padding:25px; } .kpis { grid-template-columns:repeat(2,1fr); } }
+    @media(max-width:700px) { .topbar { display:block; } .top-actions { margin-top:15px; } .period { display:inline-block; } .kpis,.two { grid-template-columns:1fr; } main { padding:20px 14px; } .chart-card { height:315px; } .chart-wrap { height:245px; } th,td { padding:10px 8px; } th:nth-child(3),td:nth-child(3),th:nth-child(5),td:nth-child(5) { display:none; } }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar"><div class="brand">cart<b>nest</b></div><div class="nav-label">Workspace</div><div class="nav-item active">◈ &nbsp; Control tower</div><div class="nav-label">Report</div><a class="nav-item sidebar-link" href="CartNest_Settlement_Report_Sep_2026.xlsx" download>↓ &nbsp; Download Excel</a><div class="sidebar-footer">Settlement intelligence<br>Prepared for Finance · Sep 2026</div></aside>
+  <main>
+    <div class="topbar"><div><div class="section-kicker">Finance reconciliation</div><h1>Settlement control tower</h1><div class="subtitle">A decision-ready summary of sales, expected payout, bank cash and the small set of items that need follow-up.</div></div><div class="top-actions"><a class="download" href="CartNest_Settlement_Report_Sep_2026.xlsx" download>↓ Download Excel report</a><div class="period">● &nbsp; September 2026</div></div></div>
+    <div class="grid kpis">
+      <div class="card kpi"><div class="kpi-label">Gross sales</div><div class="kpi-value" id="grossSales">—</div><div class="kpi-meta" id="salesItems">— items recorded</div></div>
+      <div class="card kpi"><div class="kpi-label">Expected net payout</div><div class="kpi-value" id="expectedNet">—</div><div class="kpi-meta">After fees, taxes and returns</div></div>
+      <div class="card kpi"><div class="kpi-label">Cash received</div><div class="kpi-value good" id="actualCash">—</div><div class="kpi-meta" id="cashMeta">Bank credits from ShopVerse</div></div>
+      <div class="card kpi"><div class="kpi-label">Unreconciled difference</div><div class="kpi-value bad" id="unreconciled">—</div><div class="kpi-meta">Timing items are shown separately</div></div>
+    </div>
+    <div class="section"><div class="section-head"><h2>Where the money went</h2><span class="section-note">Net payout bridge</span></div><div class="grid two"><div class="card bridge" id="bridge"></div><div class="card insights"><div class="section-head"><h2>Plain-English readout</h2></div><div id="insights"></div></div></div></div>
+    <div class="section"><div class="section-head"><h2>Performance pulse</h2><span class="section-note">Sales mix and payout activity</span></div><div class="grid two"><div class="card chart-card"><div class="chart-wrap"><canvas id="categoryChart"></canvas></div></div><div class="card chart-card"><div class="chart-wrap"><canvas id="dailyChart"></canvas></div></div></div></div>
+    <div class="section"><div class="section-head"><h2>Exception queue</h2><span class="section-note">Prioritized records for follow-up</span></div><div class="card table-card"><div class="table-toolbar"><div class="section-note" id="exceptionCount">—</div><select id="filter"><option value="all">All exception types</option><option value="T+7 due in October">T+7 due in October</option><option value="Unpaid shipped item">Unpaid shipped item</option><option value="Fee overcharge">Fee overcharge</option><option value="Cancelled fee deduction">Cancelled fee deduction</option></select></div><table><thead><tr><th>Item ID</th><th>Issue</th><th>Date</th><th>Category</th><th>Amount at risk</th></tr></thead><tbody id="exceptionBody"></tbody></table></div></div>
+    <div class="foot">Generated from normalized CSV data · Refresh with <b>python clean_data.py</b></div>
+  </main>
+</div>
+<script>
+const d = window.RECONCILIATION_DATA;
+const money = n => new Intl.NumberFormat("en-IN", {style:"currency", currency:"INR", maximumFractionDigits:0}).format(n);
+const compact = n => new Intl.NumberFormat("en-IN", {notation:"compact", maximumFractionDigits:1}).format(n);
+document.getElementById("grossSales").textContent = money(d.kpis.grossSales);
+document.getElementById("expectedNet").textContent = money(d.kpis.expectedNet);
+document.getElementById("actualCash").textContent = money(d.kpis.actualCash);
+document.getElementById("unreconciled").textContent = money(d.kpis.unreconciled);
+document.getElementById("salesItems").textContent = d.kpis.salesItems.toLocaleString("en-IN") + " items recorded";
+document.getElementById("cashMeta").textContent = "ShopVerse bank credits · " + Math.round(d.kpis.actualCash / d.kpis.expectedNet * 100) + "% of expected";
+const bridge = document.getElementById("bridge");
+d.bridge.forEach(x => bridge.insertAdjacentHTML("beforeend", `<div class="bridge-row"><span>${x.label}</span><span class="amount ${x.kind}">${x.amount < 0 ? "− " : ""}${money(Math.abs(x.amount))}</span></div>`));
+const insights = [
+  ["orange", `${money(d.kpis.timingAmount)} is timing, not loss.`, `${d.kpis.timingItems.toLocaleString("en-IN")} items dispatched after 23 Sep are due in October under T+7.`],
+  ["red", `${money(d.kpis.unpaidAmount)} needs a recovery claim.`, `${d.kpis.unpaidItems} shipped items have no matching settlement record.`],
+  ["", `${money(d.kpis.overchargeAmount)} may be recoverable.`, `${d.kpis.overchargeItems} items exceed the fee rate-card commission calculation.`],
+  ["", `Bank cash covers most expected value.`, `The remaining difference should be tracked by issue type, not treated as one unexplained gap.`]
+];
+insights.forEach(x => document.getElementById("insights").insertAdjacentHTML("beforeend", `<div class="insight"><i class="dot ${x[0]}"></i><div><strong>${x[1]}</strong><span>${x[2]}</span></div></div>`));
+new Chart(document.getElementById("categoryChart"), {
+  type: "doughnut",
+  data: { labels: d.categories.map(x => x.name), datasets: [{ data: d.categories.map(x => x.sales), backgroundColor: ["#4778ee", "#19a88e", "#f59c4a", "#a679d6"], borderWidth: 0 }] },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: "68%",
+    plugins: {
+      legend: { position: "right", labels: { usePointStyle: true, boxWidth: 8, font: { family: "DM Sans", size: 11 } } },
+      title: { display: true, text: "Gross sales by category", align: "start", color: "#162333", font: { family: "Space Grotesk", size: 15, weight: "600" }, padding: { bottom: 20 } },
+      tooltip: { callbacks: { label: c => ` ${c.label}: ${money(c.raw)}` } }
+    }
+  }
+});
+const labels=d.dailySales.map(x=>x.date.slice(8)); const sales=d.dailySales.map(x=>x.sales); const payouts=labels.map(day=>{const date="2026-09-"+day; return d.dailyPayouts[date]||0});
+new Chart(document.getElementById("dailyChart"), {
+  type: "bar",
+  data: { labels, datasets: [{ label: "Sales", data: sales, backgroundColor: "#4778ee88", borderRadius: 3 }, { label: "Payouts", data: payouts, backgroundColor: "#19a88e99", borderRadius: 3 }] },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    scales: { x: { grid: { display: false }, ticks: { font: { size: 9 } } }, y: { grid: { color: "#edf1f5" }, ticks: { callback: v => compact(v), font: { size: 10 } } } },
+    plugins: {
+      legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 8, font: { family: "DM Sans", size: 11 } } },
+      title: { display: true, text: "Daily sales vs settlement payout", align: "start", color: "#162333", font: { family: "Space Grotesk", size: 15, weight: "600" }, padding: { bottom: 15 } }
+    }
+  }
+});
+function renderTable() { const type=document.getElementById("filter").value; const rows=d.exceptions.filter(x=>type==="all"||x.issue===type); document.getElementById("exceptionCount").textContent=`Showing ${Math.min(rows.length,100)} of ${rows.length} exception records`; document.getElementById("exceptionBody").innerHTML=rows.slice(0,100).map(x=>`<tr><td><b>${x.id}</b></td><td><span class="tag ${x.issue.startsWith("T+7")?"timing":x.issue.startsWith("Unpaid")?"unpaid":x.issue.startsWith("Fee")?"fee":"cancel"}">${x.issue}</span></td><td>${x.date}</td><td>${x.category}</td><td class="amount">${money(x.amount)}</td></tr>`).join("")||`<tr><td colspan="5" class="empty">No records in this view.</td></tr>`; }
+document.getElementById("filter").addEventListener("change",renderTable); renderTable();
+</script>
+</body>
+</html>
